@@ -2,8 +2,8 @@
 
 import time
 from collections import deque
-from typing import Callable, Any
 from enum import Enum
+from typing import Any
 
 
 class CircuitState(Enum):
@@ -69,8 +69,8 @@ class CircuitBreaker:
 
         self.state = CircuitState.CLOSED
         self.failures: deque[float] = deque()
-        self.last_failure = 0
-        self.opened_at = 0
+        self.last_failure = 0.0
+        self.opened_at = 0.0
 
     def record_failure(self) -> None:
         """Record a failure."""

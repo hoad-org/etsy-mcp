@@ -1,11 +1,12 @@
 """AES-256-GCM encryption with PBKDF2 key derivation (NIST-compliant)."""
 
-import os
 import base64
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
-from cryptography.hazmat.primitives import hashes
+import os
+
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 class CryptoManager:
@@ -26,7 +27,7 @@ class CryptoManager:
         if salt is None:
             salt = os.urandom(CryptoManager.SALT_SIZE)
 
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=CryptoManager.KEY_SIZE,
             salt=salt,
@@ -64,9 +65,7 @@ class CryptoManager:
             encrypted_data = base64.b64decode(encrypted_text.encode())
 
             salt = encrypted_data[: CryptoManager.SALT_SIZE]
-            nonce = encrypted_data[
-                CryptoManager.SALT_SIZE : CryptoManager.SALT_SIZE + 12
-            ]
+            nonce = encrypted_data[CryptoManager.SALT_SIZE : CryptoManager.SALT_SIZE + 12]
             ciphertext_and_tag = encrypted_data[CryptoManager.SALT_SIZE + 12 :]
 
             key, _ = CryptoManager.derive_key(password, salt)

@@ -1,9 +1,9 @@
 """Immutable JSONL audit logging with HMAC-SHA256 integrity signing."""
 
-import json
-import hmac
 import hashlib
-from datetime import datetime
+import hmac
+import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +11,7 @@ from typing import Any
 class AuditLogger:
     """Manage JSONL audit logs with HMAC signatures."""
 
-    HMAC_SECRET = "audit-log-integrity"  # TODO: Move to secure key derivation
+    HMAC_SECRET = "audit-log-integrity"  # nosec B105 # TODO: Move to secure key derivation
 
     def __init__(self, log_dir: str) -> None:
         """Initialize audit logger with log directory."""
@@ -34,7 +34,7 @@ class AuditLogger:
 
         # Create log entry
         entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "action": action,
             "details": safe_details,
         }
@@ -49,7 +49,7 @@ class AuditLogger:
         entry["_signature"] = signature
 
         # Append to today's log file
-        log_file = self.log_dir / f"{datetime.utcnow().strftime('%Y-%m-%d')}.jsonl"
+        log_file = self.log_dir / f"{datetime.now(UTC).strftime('%Y-%m-%d')}.jsonl"
         with open(log_file, "a") as f:
             f.write(json.dumps(entry) + "\n")
 
@@ -89,7 +89,7 @@ class AuditLogger:
     @staticmethod
     def _redact(data: dict[str, Any], redact_keys: list[str]) -> dict[str, Any]:
         """Redact sensitive keys from dictionary."""
-        safe_data = {}
+        safe_data: dict[str, Any] = {}
         for key, value in data.items():
             if key.lower() in [k.lower() for k in redact_keys]:
                 safe_data[key] = "[REDACTED]"

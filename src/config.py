@@ -1,9 +1,9 @@
 """4-level configuration hierarchy: code defaults -> master -> repo -> env."""
 
-import os
 import json
+import os
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from dataclasses import dataclass, asdict
 from typing import Any
 
 
