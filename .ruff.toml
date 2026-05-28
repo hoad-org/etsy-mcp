@@ -1,0 +1,4 @@
+[lint]
+ignore = [
+  "T201",  # Allow print() for MCP protocol stdout communication
+]
