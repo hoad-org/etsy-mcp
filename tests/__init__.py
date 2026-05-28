@@ -1,0 +1,1 @@
+"""Etsy MCP tests."""

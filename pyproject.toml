@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=67.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "etsy-mcp"
+version = "0.1.0"
+description = "Secure Etsy store management MCP with NIST-aligned security"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name = "Craig Hood", email = "craig@hoad-org.dev"}]
+license = {text = "MIT"}
+
+dependencies = [
+    "requests>=2.31.0",
+    "click>=8.1.0",
+    "cryptography>=41.0.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+    "mypy>=1.5.0",
+    "bandit>=1.7.0",
+]
+
+[project.scripts]
+etsy-mcp = "etsy_mcp.cli:main"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "T20", "PIE"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "--cov=src --cov-report=html --cov-report=term-missing"
