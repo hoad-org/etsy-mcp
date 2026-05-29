@@ -101,7 +101,7 @@ class BaseOperationDef(ABC):
             param_spec = self.parameters[param_name]
 
             # Type validation
-            type_mapping = {
+            type_mapping: dict[str, type | tuple[type, ...]] = {
                 "string": str,
                 "integer": int,
                 "number": (int, float),

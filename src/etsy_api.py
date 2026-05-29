@@ -264,7 +264,7 @@ class EtsyAPI:
         response.raise_for_status()
 
         data: dict[str, Any] = response.json()
-        return data.get("order", {})
+        return data.get("order", {}) or {}
 
     # P2 (Write, Requires Approval) Methods
 

@@ -8,7 +8,7 @@ from src.operations import BaseOperationDef, Operation
 class OperationRegistry:
     """Registry of all available operations (P1-P4)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._operations: dict[str, BaseOperationDef] = {}
 
     def register(self, op_def: BaseOperationDef) -> None:

@@ -2,7 +2,6 @@
 
 import json
 import sqlite3
-import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -54,10 +53,7 @@ class OperationStore:
                     bulk_parent_id TEXT,
                     step_function_arn TEXT,
                     step_function_execution_id TEXT,
-                    metadata TEXT DEFAULT '{}',
-                    INDEX idx_status (status),
-                    INDEX idx_created_at (created_at),
-                    INDEX idx_approval_gate_id (approval_gate_id)
+                    metadata TEXT DEFAULT '{}'
                 );
 
                 CREATE TABLE IF NOT EXISTS approval_gates (
@@ -70,11 +66,16 @@ class OperationStore:
                     expires_at TEXT NOT NULL,
                     approval_timestamp TEXT,
                     reason TEXT,
-                    FOREIGN KEY (operation_id) REFERENCES operations(id),
-                    INDEX idx_status (status),
-                    INDEX idx_expires_at (expires_at),
-                    INDEX idx_operation_id (operation_id)
+                    FOREIGN KEY (operation_id) REFERENCES operations(id)
                 );
+
+                CREATE INDEX IF NOT EXISTS idx_operations_status ON operations(status);
+                CREATE INDEX IF NOT EXISTS idx_operations_created_at ON operations(created_at);
+                CREATE INDEX IF NOT EXISTS idx_operations_approval_gate_id ON operations(approval_gate_id);
+
+                CREATE INDEX IF NOT EXISTS idx_approval_gates_status ON approval_gates(status);
+                CREATE INDEX IF NOT EXISTS idx_approval_gates_expires_at ON approval_gates(expires_at);
+                CREATE INDEX IF NOT EXISTS idx_approval_gates_operation_id ON approval_gates(operation_id);
                 """
             )
             conn.commit()
@@ -162,7 +163,8 @@ class OperationStore:
                 op.completed_at = datetime.fromisoformat(row["completed_at"])
             op.result = json.loads(row["result"]) if row["result"] else None
             op.error = row["error"]
-            op.approval_gate_id = row["approval_gate_id"]
+            if row["approval_gate_id"]:
+                op.approval_gate = self.get_approval_gate(row["approval_gate_id"])
             op.bulk_parent_id = row["bulk_parent_id"]
             op.step_function_arn = row["step_function_arn"]
             op.step_function_execution_id = row["step_function_execution_id"]
@@ -246,6 +248,7 @@ class OperationStore:
         status: OperationStatus,
         result: Any | None = None,
         error: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Update operation status (moving through state machine)."""
         conn = self._get_conn()
@@ -262,7 +265,7 @@ class OperationStore:
             conn.execute(
                 """
                 UPDATE operations
-                SET status = ?, result = ?, error = ?,
+                SET status = ?, result = ?, error = ?, metadata = ?,
                     executed_at = COALESCE(executed_at, ?),
                     completed_at = COALESCE(completed_at, ?)
                 WHERE id = ?
@@ -271,6 +274,7 @@ class OperationStore:
                     status.value,
                     json.dumps(result) if result else None,
                     error,
+                    json.dumps(metadata) if metadata else None,
                     executed_at,
                     completed_at,
                     op_id,
@@ -403,7 +407,8 @@ class OperationStore:
             op.completed_at = datetime.fromisoformat(row["completed_at"])
         op.result = json.loads(row["result"]) if row["result"] else None
         op.error = row["error"]
-        op.approval_gate_id = row["approval_gate_id"]
+        if row["approval_gate_id"]:
+            op.approval_gate = self.get_approval_gate(row["approval_gate_id"])
         op.bulk_parent_id = row["bulk_parent_id"]
         op.step_function_arn = row["step_function_arn"]
         op.step_function_execution_id = row["step_function_execution_id"]

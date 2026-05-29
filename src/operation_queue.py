@@ -126,7 +126,9 @@ class OperationQueue:
                 )
 
                 # Reset to pending for retry
-                self.store.update_operation_status(op_req.id, OperationStatus.PENDING)
+                self.store.update_operation_status(
+                    op_req.id, OperationStatus.PENDING, metadata=op_req._metadata
+                )
             else:
                 # Max retries exceeded
                 error_msg = f"Operation failed after {max_retries} attempts: {e}"
